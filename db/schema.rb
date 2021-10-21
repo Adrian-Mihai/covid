@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2021_10_20_180556) do
+ActiveRecord::Schema.define(version: 2021_10_21_202913) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -42,7 +42,7 @@ ActiveRecord::Schema.define(version: 2021_10_20_180556) do
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
     t.index ["country_id"], name: "index_disease_reports_on_country_id"
-    t.index ["date"], name: "index_disease_reports_on_date", unique: true
+    t.index ["date", "country_id"], name: "index_disease_reports_on_date_and_country_id", unique: true
   end
 
   create_table "district_reports", force: :cascade do |t|
@@ -51,7 +51,7 @@ ActiveRecord::Schema.define(version: 2021_10_20_180556) do
     t.integer "cases"
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
-    t.index ["date"], name: "index_district_reports_on_date", unique: true
+    t.index ["date", "district_id"], name: "index_district_reports_on_date_and_district_id", unique: true
     t.index ["district_id"], name: "index_district_reports_on_district_id"
   end
 
@@ -87,7 +87,7 @@ ActiveRecord::Schema.define(version: 2021_10_20_180556) do
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
     t.index ["country_id"], name: "index_vaccination_reports_on_country_id"
-    t.index ["date"], name: "index_vaccination_reports_on_date", unique: true
+    t.index ["date", "country_id"], name: "index_vaccination_reports_on_date_and_country_id", unique: true
   end
 
   add_foreign_key "disease_reports", "countries"

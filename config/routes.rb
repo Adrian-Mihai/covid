@@ -6,7 +6,10 @@ Rails.application.routes.draw do
   namespace :api do
     namespace :v1 do
       resources :countries, only: %i[index show] do
-        resources :districts, only: %i[index show]
+        resources :disease_reports, only: :index
+        resources :districts, only: %i[index show] do
+          resources :district_reports, only: :index
+        end
       end
     end
   end

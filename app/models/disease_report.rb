@@ -1,5 +1,5 @@
 class DiseaseReport < ApplicationRecord
-  validates :date, presence: true, uniqueness: true
+  validates :date, presence: true, uniqueness: { scope: :country_id }
   validates :cases, numericality: { only_integer: true, greater_than_or_equal_to: 0 }, allow_blank: true
   validates :tests, numericality: { only_integer: true, greater_than_or_equal_to: 0 }, allow_blank: true
   validates :deaths, numericality: { only_integer: true, greater_than_or_equal_to: 0 }, allow_blank: true
