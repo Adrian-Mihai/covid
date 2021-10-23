@@ -22,16 +22,21 @@ module Provider
         data = retrieve_data
         return self if data.nil?
 
-        data[:covid_romania].each do |daily_report|
-          next if @country.disease_reports.exists?(date: daily_report[:reporting_date])
+        country_data = retrieve_country_data_form(data[:covid_romania])
+        districts_data = retrieve_district_data_from(data[:covid_romania])
 
-          @country.disease_reports.create!(map_disease_report_data(daily_report))
-          save_data_for_districts(daily_report[:county_data], daily_report[:reporting_date])
+        @country.update!(payload: { disease: country_data })
+        @country.districts.each do |district|
+          payload = districts_data[district.code]
+          next if payload.nil?
+
+          district.update!(payload: { disease: payload })
         rescue ActiveRecord::RecordInvalid => e
           e.record.errors.full_messages.each { |msg| @errors << "#{e.record.class.name} - #{msg}" }
-          next
         end
-
+        self
+      rescue ActiveRecord::RecordInvalid => e
+        e.record.errors.full_messages.each { |msg| @errors << "#{e.record.class.name} - #{msg}" }
         self
       end
 
@@ -49,7 +54,11 @@ module Provider
         @errors << e.message
         nil
       end
-      
+
+      def retrieve_country_data_form(disease_report)
+        disease_report.map { |report| map_disease_report_data(report) }.reverse
+      end
+
       def map_disease_report_data(daily_report)
         {
           date: daily_report[:reporting_date],
@@ -68,21 +77,33 @@ module Provider
         }
       end
 
-      def save_data_for_districts(data, date)
-        return if data.nil?
-
-        data.each do |district|
-          d = @country.districts.find_by!(code: district[:county_id])
-          next if d.district_reports.exists?(date: date)
-
-          d.district_reports.create!(date: date, cases: district[:total_cases])
-        rescue ActiveRecord::RecordNotFound => e
-          @errors << "Couldn't find #{e.model}"
-          next
-        rescue ActiveRecord::RecordInvalid => e
-          e.record.errors.full_messages.each { |msg| @errors << "#{e.record.class.name} - #{msg}" }
-          next
+      def retrieve_district_data_from(disease_report)
+        districts = @country.districts.pluck(:code).map { |code| [code, []] }.to_h
+        county_data = disease_report.pluck(:reporting_date, :county_data).map do |date, district_data|
+          district_data&.map do |hash|
+            hash[:date] = date
+            hash
+          end
         end
+        county_data.compact.each do |daily_report|
+          daily_report.each do |county_report|
+            districts[county_report[:county_id]] << { date: county_report[:date], cases: county_report[:total_cases] }
+          end
+        end
+        districts.transform_values!(&:reverse)
+        districts.each do |county, reports|
+          aux = []
+          reports.each_with_index do |report, index|
+            next if index.zero?
+
+            tmp = { date: report[:date], cases: nil }
+            cases = report[:cases] - reports[index - 1][:cases]
+            tmp[:cases] = cases >= 0 ? cases : 0
+            aux << tmp
+          end
+          districts[county] = aux
+        end
+        districts
       end
     end
   end
