@@ -5,8 +5,6 @@ class District < ApplicationRecord
   validates :code, presence: true, uniqueness: true
   validates :population, numericality: { only_integer: true, greater_than_or_equal_to: 0 }
 
-  has_many :district_reports
-
   belongs_to :country
 
   private
