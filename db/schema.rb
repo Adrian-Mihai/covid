@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2021_10_20_180556) do
+ActiveRecord::Schema.define(version: 2021_10_23_172152) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -21,38 +21,8 @@ ActiveRecord::Schema.define(version: 2021_10_20_180556) do
     t.integer "population", default: 0, null: false
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
+    t.jsonb "payload", default: {}, null: false
     t.index ["code"], name: "index_countries_on_code", unique: true
-  end
-
-  create_table "disease_reports", force: :cascade do |t|
-    t.bigint "country_id", null: false
-    t.date "date", null: false
-    t.integer "cases"
-    t.integer "tests"
-    t.integer "deaths"
-    t.integer "recovered"
-    t.integer "intensive_care"
-    t.integer "hospitalized"
-    t.integer "emergency_calls"
-    t.integer "information_calls"
-    t.integer "home_isolation"
-    t.integer "home_quarantine"
-    t.integer "institutional_isolation"
-    t.integer "institutional_quarantine"
-    t.datetime "created_at", precision: 6, null: false
-    t.datetime "updated_at", precision: 6, null: false
-    t.index ["country_id"], name: "index_disease_reports_on_country_id"
-    t.index ["date"], name: "index_disease_reports_on_date", unique: true
-  end
-
-  create_table "district_reports", force: :cascade do |t|
-    t.bigint "district_id", null: false
-    t.date "date", null: false
-    t.integer "cases"
-    t.datetime "created_at", precision: 6, null: false
-    t.datetime "updated_at", precision: 6, null: false
-    t.index ["date"], name: "index_district_reports_on_date", unique: true
-    t.index ["district_id"], name: "index_district_reports_on_district_id"
   end
 
   create_table "districts", force: :cascade do |t|
@@ -62,6 +32,7 @@ ActiveRecord::Schema.define(version: 2021_10_20_180556) do
     t.integer "population", default: 0, null: false
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
+    t.jsonb "payload", default: {}, null: false
     t.index ["code"], name: "index_districts_on_code", unique: true
     t.index ["country_id"], name: "index_districts_on_country_id"
   end
@@ -79,20 +50,6 @@ ActiveRecord::Schema.define(version: 2021_10_20_180556) do
     t.index ["country_id"], name: "index_overviews_on_country_id"
   end
 
-  create_table "vaccination_reports", force: :cascade do |t|
-    t.bigint "country_id", null: false
-    t.date "date", null: false
-    t.jsonb "vaccine", default: {}, null: false
-    t.jsonb "side_effect", default: {}, null: false
-    t.datetime "created_at", precision: 6, null: false
-    t.datetime "updated_at", precision: 6, null: false
-    t.index ["country_id"], name: "index_vaccination_reports_on_country_id"
-    t.index ["date"], name: "index_vaccination_reports_on_date", unique: true
-  end
-
-  add_foreign_key "disease_reports", "countries"
-  add_foreign_key "district_reports", "districts"
   add_foreign_key "districts", "countries"
   add_foreign_key "overviews", "countries"
-  add_foreign_key "vaccination_reports", "countries"
 end

@@ -6,7 +6,8 @@ module Api
       end
 
       def show
-        render json: Country.find(params[:id]), status: :ok
+        country = Country.find_by!(code: params[:id])
+        render json: country, additional_information: additional_information, status: :ok
       rescue ActiveRecord::RecordNotFound => e
         render json: { messages: ["Couldn't find #{e.model}"] }, status: :not_found
       end

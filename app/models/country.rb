@@ -6,8 +6,6 @@ class Country < ApplicationRecord
   validates :population, numericality: { only_integer: true, greater_than_or_equal_to: 0 }
 
   has_many :districts
-  has_many :disease_reports
-  has_many :vaccination_reports
 
   has_one :overview
 
