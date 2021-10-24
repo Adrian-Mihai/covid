@@ -1,20 +1,7 @@
 module Provider
   module Ro
-    class RetrieveDiseaseData
-      URL = 'https://www.graphs.ro/json.php'.freeze
-
-      attr_reader :errors
-
-      def initialize(code:)
-        @errors = []
-        @country = Country.find_by!(code: code)
-      rescue ActiveRecord::RecordNotFound => e
-        @errors << "Couldn't find #{e.model}"
-      end
-
-      def valid?
-        @errors.empty?
-      end
+    class RetrieveDiseaseData < Provider::Ro::Base
+      PATH = '/json.php'.freeze
 
       def perform
         return self unless valid?
@@ -25,15 +12,19 @@ module Provider
         country_data = retrieve_country_data_form(data[:covid_romania])
         districts_data = retrieve_district_data_from(data[:covid_romania])
 
-        @country.update!(payload: { disease: country_data })
+        payload = @country.payload.deep_merge(disease: country_data)
+        @country.update!(payload: payload)
         @country.districts.each do |district|
-          payload = districts_data[district.code]
-          next if payload.nil?
+          district_payload = districts_data[district.code]
+          next if district_payload.nil?
 
-          district.update!(payload: { disease: payload })
+          payload = district.payload.deep_merge(disease: district_payload)
+          district.update!(payload: payload)
         rescue ActiveRecord::RecordInvalid => e
           e.record.errors.full_messages.each { |msg| @errors << "#{e.record.class.name} - #{msg}" }
+          next
         end
+
         self
       rescue ActiveRecord::RecordInvalid => e
         e.record.errors.full_messages.each { |msg| @errors << "#{e.record.class.name} - #{msg}" }
@@ -42,17 +33,8 @@ module Provider
 
       private
 
-      def retrieve_data
-        response = Faraday.get(URL)
-        unless response.success?
-          @errors << "Provider respond with status #{response.status} and body #{response.body}"
-          return nil
-        end
-
-        JSON.parse(response.body, symbolize_names: true)
-      rescue Faraday::ClientError, Faraday::ServerError, JSON::ParserError => e
-        @errors << e.message
-        nil
+      def url
+        URL + PATH
       end
 
       def retrieve_country_data_form(disease_report)
