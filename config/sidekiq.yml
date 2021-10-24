@@ -1,6 +1,6 @@
 :concurrency: 10
 production:
-  :concurrency: 20
+  :concurrency: <%= ENV['RAILS_MAX_THREADS'] || 10 %>
 
 :queues:
   - critical
