@@ -25,7 +25,9 @@ module CovidApi
     config.load_defaults 6.1
 
     # Configuration for the application, engines, and railties goes here.
-    #
+
+    config.active_job.queue_adapter = :sidekiq
+    config.session_store :cookie_store, key: '_interslice_session'
     # These settings can be overridden in specific environments using the files
     # in config/environments, which are processed later.
     #
