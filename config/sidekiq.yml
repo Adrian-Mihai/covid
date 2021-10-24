@@ -1,0 +1,25 @@
+:concurrency: 10
+production:
+  :concurrency: 20
+
+:queues:
+  - critical
+  - default
+  - scheduler
+  - low
+
+:schedule:
+  retrieve_disease_data_ro:
+    cron: <%= ENV['RETRIEVE_DISEASE_DATA_RO'] || '0 12 * * *' %>
+    queue: scheduler
+    class: RetrieveDataCron
+    args: ['RO', 'disease']
+    description: 'This cron retrieve COVID infection data from Romania'
+    enabled: true
+  retrieve_vaccine_data_ro:
+    cron: <%= ENV['RETRIEVE_VACCINE_DATA_RO'] || '0 17 * * *' %>
+    queue: scheduler
+    class: RetrieveDataCron
+    args: ['RO', 'vaccine']
+    description: 'This cron retrieve vaccination information from Romania'
+    enabled: true
