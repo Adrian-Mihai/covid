@@ -7,8 +7,6 @@ class Country < ApplicationRecord
 
   has_many :districts
 
-  has_one :overview
-
   private
 
   def sanitize_code

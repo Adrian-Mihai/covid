@@ -9,9 +9,9 @@ module Provider
         data = retrieve_data
         return self if data.nil?
 
-        country_data = retrieve_country_data_form(data[:covid_romania_vaccination])
-        payload = @country.payload.deep_merge(vaccine: country_data)
-        @country.update!(payload: payload)
+        update_vaccination_infos(data[:covid_romania_vaccination])
+        update_vaccination_overview(data.dig(:covid_romania_vaccination, 0))
+
         self
       rescue ActiveRecord::RecordInvalid => e
         e.record.errors.full_messages.each { |msg| @errors << "#{e.record.class.name} - #{msg}" }
@@ -22,6 +22,16 @@ module Provider
 
       def url
         URL + PATH
+      end
+
+      def update_vaccination_infos(daily_reports)
+        return if daily_reports.nil?
+
+        country_data = retrieve_country_data_form(daily_reports)
+        payload = @country.payload.deep_merge(vaccine: country_data)
+        @country.update!(payload: payload)
+      rescue ActiveRecord::RecordInvalid => e
+        e.record.errors.full_messages.each { |msg| @errors << "#{e.record.class.name} - #{msg}" }
       end
 
       def retrieve_country_data_form(vaccine_report)
@@ -64,6 +74,26 @@ module Provider
             }
           }
         }
+      end
+
+      def update_vaccination_overview(report)
+        return if report.nil?
+
+        vaccinated = report[:total_2].to_i
+        return if vaccinated.nil?
+
+        payload = @country.payload['vaccine']
+        vaccine = {
+          period: {
+            from: payload.first&.dig('date'),
+            to: payload.last&.dig('date')
+          },
+          vaccinated: vaccinated
+        }
+
+        @country.update!(overview: @country.overview.deep_merge(vaccine: vaccine))
+      rescue ActiveRecord::RecordInvalid => e
+        e.record.errors.full_messages.each { |msg| @errors << "#{e.record.class.name} - #{msg}" }
       end
     end
   end

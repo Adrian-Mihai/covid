@@ -17,7 +17,7 @@ production:
     description: 'This cron retrieve COVID infection data from Romania'
     enabled: true
   retrieve_vaccine_data_ro:
-    cron: <%= ENV['RETRIEVE_VACCINE_DATA_RO'] || '0 17 * * *' %>
+    cron: <%= ENV['RETRIEVE_VACCINE_DATA_RO'] || '0 16 * * *' %>
     queue: scheduler
     class: RetrieveDataCron
     args: ['RO', 'vaccine']

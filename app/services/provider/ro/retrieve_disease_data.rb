@@ -24,6 +24,10 @@ module Provider
           e.record.errors.full_messages.each { |msg| @errors << "#{e.record.class.name} - #{msg}" }
           next
         end
+        update_country_disease_overview
+        update_districts_disease_overview
+        update_country_population(data[:covid_romania]&.first)
+        update_districts_population(data.dig(:covid_romania, 0, :county_data))
 
         self
       rescue ActiveRecord::RecordInvalid => e
@@ -86,6 +90,72 @@ module Provider
           districts[county] = aux
         end
         districts
+      end
+
+      def update_country_population(daily_report)
+        return if daily_report.nil?
+
+        country_population = daily_report[:romania_population_2020].to_i
+        return if country_population.zero?
+
+        @country.update!(population: country_population)
+      rescue ActiveRecord::RecordInvalid => e
+        e.record.errors.full_messages.each { |msg| @errors << "#{e.record.class.name} - #{msg}" }
+      end
+
+      def update_districts_population(counties)
+        return if counties.nil?
+
+        counties.each do |county|
+          district = @country.districts.find_by(code: county[:county_id])
+          next if district.nil?
+
+          county_population = county[:county_population].to_i
+          next if county_population.zero?
+
+          district.update!(population: county_population)
+        rescue ActiveRecord::RecordInvalid => e
+          e.record.errors.full_messages.each { |msg| @errors << "#{e.record.class.name} - #{msg}" }
+          next
+        end
+      end
+
+      def update_country_disease_overview
+        payload = @country.payload['disease']
+        disease = {
+          period: {
+            from: payload.first&.dig('date'),
+            to: payload.last&.dig('date')
+          },
+          cases: payload.pluck('cases').map(&:to_i).sum,
+          tests: payload.pluck('tests').map(&:to_i).sum,
+          deaths: payload.pluck('deaths').map(&:to_i).sum,
+          recovered: payload.pluck('recovered').map(&:to_i).sum
+        }
+
+        @country.update!(overview: @country.overview.deep_merge(disease: disease))
+      rescue ActiveRecord::RecordInvalid => e
+        e.record.errors.full_messages.each { |msg| @errors << "#{e.record.class.name} - #{msg}" }
+      end
+
+      def update_districts_disease_overview
+        @country.districts.each do |district|
+          payload = district.payload['disease']
+          next if payload.nil?
+
+          disease = {
+            period: {
+              from: payload.first&.dig('date'),
+              to: payload.last&.dig('date')
+            },
+            cases: payload.pluck('cases').map(&:to_i).sum
+          }
+
+          district.update!(overview: district.overview.deep_merge(disease: disease))
+        rescue ActiveRecord::RecordInvalid => e
+          e.record.errors.full_messages.each { |msg| @errors << "#{e.record.class.name} - #{msg}" }
+          next
+        end
       end
     end
   end

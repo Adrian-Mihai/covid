@@ -1,10 +1,9 @@
 module Api
   module V1
     class CountrySerializer < ActiveModel::Serializer
-      attributes :code, :name, :population
+      attributes :code, :name, :population, :overview, :provider
       attribute :disease, if: :include_disease?
       attribute :vaccine, if: :include_vaccine?
-      attribute :provider, if: :include_provider?
 
       def disease
         object.payload['disease']
@@ -30,10 +29,6 @@ module Api
         return false if additional_information.nil?
 
         additional_information[:include_vaccine_information] == 'true'
-      end
-
-      def include_provider?
-        include_disease? || include_vaccine?
       end
     end
   end
