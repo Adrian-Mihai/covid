@@ -1,11 +1,15 @@
 module Api
   module V1
     class DistrictSerializer < ActiveModel::Serializer
-      attributes :code, :name, :population
+      attributes :code, :name, :population, :overview, :provider
       attribute :disease, if: :include_disease?
 
       def disease
         object.payload['disease']
+      end
+
+      def provider
+        "Provider::#{object.country.code.downcase.classify}::Base::URL".safe_constantize
       end
 
       def include_disease?

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2021_10_23_172152) do
+ActiveRecord::Schema.define(version: 2021_10_25_155618) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -22,6 +22,7 @@ ActiveRecord::Schema.define(version: 2021_10_23_172152) do
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
     t.jsonb "payload", default: {}, null: false
+    t.jsonb "overview", default: {}, null: false
     t.index ["code"], name: "index_countries_on_code", unique: true
   end
 
@@ -33,23 +34,10 @@ ActiveRecord::Schema.define(version: 2021_10_23_172152) do
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
     t.jsonb "payload", default: {}, null: false
+    t.jsonb "overview", default: {}, null: false
     t.index ["code"], name: "index_districts_on_code", unique: true
     t.index ["country_id"], name: "index_districts_on_country_id"
   end
 
-  create_table "overviews", force: :cascade do |t|
-    t.bigint "country_id", null: false
-    t.integer "cases"
-    t.integer "tests"
-    t.integer "deaths"
-    t.integer "recovered"
-    t.integer "vaccinated"
-    t.integer "side_effect"
-    t.datetime "created_at", precision: 6, null: false
-    t.datetime "updated_at", precision: 6, null: false
-    t.index ["country_id"], name: "index_overviews_on_country_id"
-  end
-
   add_foreign_key "districts", "countries"
-  add_foreign_key "overviews", "countries"
 end
