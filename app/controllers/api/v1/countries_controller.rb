@@ -2,7 +2,7 @@ module Api
   module V1
     class CountriesController < ApplicationController
       def index
-        render json: Country.all, status: :ok
+        render json: Country.all.order(:name), status: :ok
       end
 
       def show
