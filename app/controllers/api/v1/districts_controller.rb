@@ -3,7 +3,7 @@ module Api
     class DistrictsController < ApplicationController
       def index
         country = Country.find_by!(code: params[:country_id])
-        render json: country.districts, status: :ok
+        render json: country.districts.order(:name), status: :ok
       rescue ActiveRecord::RecordNotFound => e
         render json: { messages: ["Couldn't find #{e.model}"] }, status: :not_found
       end
